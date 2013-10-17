@@ -4,24 +4,23 @@ import networkx as nx
 import scipy as sp
 import numpy as np
 import random
+import matplotlib.pyplot as plt
+import sys
 
-## data
+## Data
+mat = np.loadtxt('q.txt')
+G = nx.from_numpy_matrix(mat, create_using = nx.DiGraph())
 
-G = nx.DiGraph()
-# Two loops with a link between them
-G.add_edge(1, 2, weight=1)
-G.add_edge(1, 3, weight=1)
-G.add_edge(3, 2, weight=1)
-G.add_edge(1, 4, weight=0.01)
-G.add_edge(4, 5, weight=1)
-G.add_edge(4, 6, weight=1)
-G.add_edge(5, 6, weight=1)
-G.add_edge(6, 4, weight=1)
+## Delta function
+def delta(a, b):
+   if a == b:
+      return 1
+   return 0
 
 ## Weigthed modularity
 def Qq(G):
    Qq = 0.0
-   sum_of_links = np.sum([e['weight'] for e in G.edges])
+   sum_of_links = np.sum([e[2]['weight'] for e in G.edges(data=True)])
    return Qq
 
 ## weigthed pick function
@@ -42,6 +41,8 @@ def qlp(G):
   for n in G:
     labid[n] = n
   nx.set_node_attributes(G, 'label', labid)
+  # We print the first modularity value
+  print Qq(G)
   optim.append([G.node[n]['label'] for n in G])
   # Now we can start a number of iterations
   for i in xrange(100):
@@ -61,5 +62,4 @@ def qlp(G):
     optim.append([G.node[n]['label'] for n in G])
   return optim
 
-print qlp(G)
-
+qlp(G)
