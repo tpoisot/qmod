@@ -36,4 +36,7 @@ nosetests.xml
 .pydevproject
 
 # Text files
-*.txt
+*.bnr
+*.qnt
+*.png
+*.json

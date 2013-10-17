@@ -9,8 +9,10 @@ import sys
 import json
 
 ## Data
-mat = np.abs(np.loadtxt('q.txt'))
-G = nx.from_numpy_matrix(mat, create_using = nx.DiGraph())
+def prepareData(fname):
+   mat = np.abs(np.loadtxt(fname))
+   G = nx.from_numpy_matrix(mat, create_using = nx.DiGraph())
+   return G
 
 ## Delta function
 def delta(a, b):
@@ -48,7 +50,7 @@ def wsample(d):
   return k
 
 ## label propagation function
-def qlp(G):
+def qlp(G,steps=100):
    optim = {}
    # We first initialize the labels
    labid = {}
@@ -58,7 +60,7 @@ def qlp(G):
    # We print the first modularity value
    optim["0"]={'Q':Qq(G),'labels':{str(n):G.node[n]['label'] for n in G}}
    # Now we can start a number of iterations
-   for i in xrange(20):
+   for i in xrange(steps):
       # The nodes propagate their labels in a random order
       updateorder = range(G.number_of_nodes())
       random.shuffle(updateorder)
@@ -73,7 +75,37 @@ def qlp(G):
                receiver = wsample(pick_prob)
                G.node[receiver]['label'] = G.node[updated]['label']
       optim[str(i)]={'Q':Qq(G),'labels':{str(n):G.node[n]['label'] for n in G}}
-      print Qq(G)
    return optim
 
-print json.dumps(qlp(G), sort_keys=True)
+def plotNetwork(G,fname):
+   labels = [int(G.node[n]['label']) for n in G]
+   pos = nx.spring_layout(G)
+   nx.draw(G, pos, node_color = labels)
+   plt.savefig(fname)
+   plt.close()
+   return 0
+
+def optimizeModularity(prefix, steps):
+   BNR = prefix+str('.bnr')
+   QNT = prefix+str('.qnt')
+   print "Modularity of binary network"
+   bG = prepareData(BNR)
+   Bb = qlp(bG, steps)
+   print "Modularity of quantitative network"
+   qG = prepareData(QNT)
+   Bq = qlp(qG, steps)
+   print "Writing results to file"
+   outbnr = open(BNR+'.json', 'w')
+   outbnr.write(json.dumps(Bb, outbnr, sort_keys=True))
+   outbnr.close()
+   outqnt = open(QNT+'.json', 'w')
+   outqnt.write(json.dumps(Bq, outqnt, sort_keys=True))
+   outqnt.close()
+   print "Plotting networks with modules"
+   plotNetwork(qG, QNT+str('.png'))
+   plotNetwork(bG, BNR+str('.png'))
+   print "Done!"
+   return 0
+
+if __name__ == "__main__":
+   optimizeModularity(str(sys.argv[1]), int(sys.argv[2]))
