@@ -6,9 +6,10 @@ import numpy as np
 import random
 import matplotlib.pyplot as plt
 import sys
+import json
 
 ## Data
-mat = np.loadtxt('q.txt')
+mat = np.abs(np.loadtxt('q.txt'))
 G = nx.from_numpy_matrix(mat, create_using = nx.DiGraph())
 
 ## Delta function
@@ -21,10 +22,20 @@ def delta(a, b):
 def Qq(G):
    Qq = 0.0
    sum_of_links = np.sum([e[2]['weight'] for e in G.edges(data=True)])
-   for up in G.nodes(data=True):
-      for down in G.nodes(data=True):
-         c1 = up[1]
-   return Qq
+   marginals = []
+   for l in G.edges(data=True):
+      n1 = G.node[l[0]]
+      n2 = G.node[l[1]]
+      if delta(n1['label'], n2['label']) == 0:
+         marginals.append(0)
+      else :
+         w_l = l[2]['weight']
+         suc = G.successors(l[0])
+         pre = G.predecessors(l[1])
+         w_i = np.sum([G[l[0]][s]['weight'] for s in suc])
+         w_j = np.sum([G[p][l[1]]['weight'] for p in pre])
+         marginals.append(w_l/float(sum_of_links) - (w_i*w_l)/float(sum_of_links**2.0))
+   return np.sum(marginals)
 
 ## weigthed pick function
 def wsample(d):
@@ -38,31 +49,31 @@ def wsample(d):
 
 ## label propagation function
 def qlp(G):
-  optim = []
-  # We first initialize the labels
-  labid = {}
-  for n in G:
-    labid[n] = n
-  nx.set_node_attributes(G, 'label', labid)
-  # We print the first modularity value
-  print Qq(G)
-  optim.append([G.node[n]['label'] for n in G])
-  # Now we can start a number of iterations
-  for i in xrange(100):
-    # The nodes propagate their labels in a random order
-    updateorder = range(G.number_of_nodes())
-    random.shuffle(updateorder)
-    for updated in updateorder:
-      # First we pick the outgoing edges
-      out_edges = G.edges([updated], data=True)
-      if len(out_edges) > 0:
-      	pick_prob = {}
-      	for out_e in out_edges:
-            pick_prob[out_e[1]] = out_e[2]['weight']
-            # We pick at random according to the weight
-            receiver = wsample(pick_prob)
-            G.node[receiver]['label'] = G.node[updated]['label']
-      optim.append([G.node[n]['label'] for n in G])
-    return optim
+   optim = {}
+   # We first initialize the labels
+   labid = {}
+   for n in G:
+      labid[n] = n
+   nx.set_node_attributes(G, 'label', labid)
+   # We print the first modularity value
+   optim["0"]={'Q':Qq(G),'labels':{str(n):G.node[n]['label'] for n in G}}
+   # Now we can start a number of iterations
+   for i in xrange(20):
+      # The nodes propagate their labels in a random order
+      updateorder = range(G.number_of_nodes())
+      random.shuffle(updateorder)
+      for updated in updateorder:
+         # First we pick the outgoing edges
+         out_edges = G.edges([updated], data=True)
+         if len(out_edges) > 0:
+            pick_prob = {}
+            for out_e in out_edges:
+               pick_prob[out_e[1]] = out_e[2]['weight']
+               # We pick at random according to the weight
+               receiver = wsample(pick_prob)
+               G.node[receiver]['label'] = G.node[updated]['label']
+      optim[str(i)]={'Q':Qq(G),'labels':{str(n):G.node[n]['label'] for n in G}}
+      print Qq(G)
+   return optim
 
-print qlp(G)
+print json.dumps(qlp(G), sort_keys=True)
