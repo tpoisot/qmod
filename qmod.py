@@ -21,6 +21,9 @@ def delta(a, b):
 def Qq(G):
    Qq = 0.0
    sum_of_links = np.sum([e[2]['weight'] for e in G.edges(data=True)])
+   for up in G.nodes(data=True):
+      for down in G.nodes(data=True):
+         c1 = up[1]
    return Qq
 
 ## weigthed pick function
@@ -53,13 +56,13 @@ def qlp(G):
       # First we pick the outgoing edges
       out_edges = G.edges([updated], data=True)
       if len(out_edges) > 0:
-	pick_prob = {}
-	for out_e in out_edges:
-	  pick_prob[out_e[1]] = out_e[2]['weight']
-	# We pick at random according to the weight
-	receiver = wsample(pick_prob)
-	G.node[receiver]['label'] = G.node[updated]['label']
-    optim.append([G.node[n]['label'] for n in G])
-  return optim
+      	pick_prob = {}
+      	for out_e in out_edges:
+            pick_prob[out_e[1]] = out_e[2]['weight']
+            # We pick at random according to the weight
+            receiver = wsample(pick_prob)
+            G.node[receiver]['label'] = G.node[updated]['label']
+      optim.append([G.node[n]['label'] for n in G])
+    return optim
 
-qlp(G)
+print qlp(G)
