@@ -85,27 +85,24 @@ def plotNetwork(G,fname):
    plt.close()
    return 0
 
-def optimizeModularity(prefix, steps):
-   BNR = prefix+str('.bnr')
-   QNT = prefix+str('.qnt')
-   print "Modularity of binary network"
-   bG = prepareData(BNR)
-   Bb = qlp(bG, steps)
-   print "Modularity of quantitative network"
-   qG = prepareData(QNT)
-   Bq = qlp(qG, steps)
-   print "Writing results to file"
-   outbnr = open(BNR+'.json', 'w')
-   outbnr.write(json.dumps(Bb, outbnr, sort_keys=True))
-   outbnr.close()
-   outqnt = open(QNT+'.json', 'w')
-   outqnt.write(json.dumps(Bq, outqnt, sort_keys=True))
-   outqnt.close()
-   print "Plotting networks with modules"
-   plotNetwork(qG, QNT+str('.png'))
-   plotNetwork(bG, BNR+str('.png'))
-   print "Done!"
-   return 0
-
 if __name__ == "__main__":
-   optimizeModularity(str(sys.argv[1]), int(sys.argv[2]))
+   # Read arguments
+   prefix = str(sys.argv[1])
+   steps = int(sys.argv[2])
+   # Prepare file names
+   Bin = prefix+'.bnr'
+   Qnt = prefix+'.qnt'
+   # Read files in network form
+   Gbin = prepareData(Bin)
+   Gqnt = prepareData(Qnt)
+   # Do the analysis (part1: modularity)
+   modGbin = qlp(Gbin, steps)
+   modGqnt = qlp(Gqnt, steps)
+   # Write to file
+   out = open(Bin+'.json', 'w')
+   out.write(json.dumps(modGbin, out, sort_keys=True))
+   out.close()
+   out = open(Qnt+'.json', 'w')
+   out.write(json.dumps(modGqnt, out, sort_keys=True))
+   out.close()
+
