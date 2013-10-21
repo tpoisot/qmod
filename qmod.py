@@ -77,13 +77,27 @@ def qlp(G,steps=100):
       optim[str(i)]={'Q':Qq(G),'labels':{str(n):G.node[n]['label'] for n in G}}
    return optim
 
-def plotNetwork(G,fname):
-   labels = [int(G.node[n]['label']) for n in G]
-   pos = nx.spring_layout(G)
-   nx.draw(G, pos, node_color = labels)
-   plt.savefig(fname)
-   plt.close()
-   return 0
+def pickBestPartition(run):
+   # Returns the best partition (i.e. higher modularity score)
+   best_partition = {}
+   best_q = 0.0
+   for k in run.keys():
+      if run[k]['Q'] > best_q:
+         best_partition = run[k]
+   return best_partition
+         
+
+def speciesImpactByRemoval(G, steps):
+   print "Testing species impact by removal"
+   Impact = {}
+   for n in G.nodes():
+      print "\tNode "+str(n)
+      tG = G.copy()
+      tG.remove_node(n)
+      Out = qlp(tG, steps)
+      Impact[str(n)] = pickBestPartition(Out)
+   print "Species impact by removal tested"
+   return Impact
 
 if __name__ == "__main__":
    # Read arguments
@@ -105,4 +119,8 @@ if __name__ == "__main__":
    out = open(Qnt+'.json', 'w')
    out.write(json.dumps(modGqnt, out, sort_keys=True))
    out.close()
-
+   # Test species impact by removal
+   impRenQnt = speciesImpactByRemoval(Gqnt, steps)
+   out = open(Bin+'.removal.json', 'w')
+   out.write(json.dumps(impRenQnt, out, sort_keys=True))
+   out.close()
