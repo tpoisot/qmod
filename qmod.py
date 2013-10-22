@@ -88,39 +88,37 @@ def pickBestPartition(run):
          
 
 def speciesImpactByRemoval(G, steps):
-   print "Testing species impact by removal"
    Impact = {}
    for n in G.nodes():
-      print "\tNode "+str(n)
       tG = G.copy()
       tG.remove_node(n)
       Out = qlp(tG, steps)
       Impact[str(n)] = pickBestPartition(Out)
-   print "Species impact by removal tested"
    return Impact
+
+def analyzeFile(fname, steps):
+   G = prepareData(fname)
+   mod = qlp(G, steps)
+   ## Analyse modularity
+   out = open(fname+'.json', 'w')
+   out.write(json.dumps(mod, out, sort_keys=True))
+   out.close()
+   best_partition = pickBestPartition(mod)
+   out = open(fname+'.best.json', 'w')
+   out.write(json_dumps(best_partiton, out, sort_keys=True))
+   out.close()
+   ## Test species impact by removal
+   sp_imp_rem = speciesImpactByRemoval(G, steps)
+   out = open(fname+'.rem.json', 'w')
+   out.write(json.dumps(sp_imp_rem, out, sort_keys=True))
+   out.close()
+   return 0
 
 if __name__ == "__main__":
    # Read arguments
    prefix = str(sys.argv[1])
    steps = int(sys.argv[2])
-   # Prepare file names
-   Bin = prefix+'.bnr'
-   Qnt = prefix+'.qnt'
-   # Read files in network form
-   Gbin = prepareData(Bin)
-   Gqnt = prepareData(Qnt)
-   # Do the analysis (part1: modularity)
-   modGbin = qlp(Gbin, steps)
-   modGqnt = qlp(Gqnt, steps)
-   # Write to file
-   out = open(Bin+'.json', 'w')
-   out.write(json.dumps(modGbin, out, sort_keys=True))
-   out.close()
-   out = open(Qnt+'.json', 'w')
-   out.write(json.dumps(modGqnt, out, sort_keys=True))
-   out.close()
-   # Test species impact by removal
-   impRenQnt = speciesImpactByRemoval(Gqnt, steps)
-   out = open(Bin+'.removal.json', 'w')
-   out.write(json.dumps(impRenQnt, out, sort_keys=True))
-   out.close()
+   # Read binary file
+   analyzeFile(prefix+'.bnr', steps)
+   # Read quantitative prefix
+   analyzeFile(prefix+'.qnt', steps)
