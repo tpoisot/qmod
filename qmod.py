@@ -115,6 +115,7 @@ def analyzeFile(fname, steps):
    return 0
 
 if __name__ == "__main__":
+   #TODO Need to add an help in case the args are mot O.K.
    # Read arguments
    prefix = str(sys.argv[1])
    steps = int(sys.argv[2])
