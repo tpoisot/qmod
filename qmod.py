@@ -105,7 +105,7 @@ def analyzeFile(fname, steps):
    out.close()
    best_partition = pickBestPartition(mod)
    out = open(fname+'.best.json', 'w')
-   out.write(json.dumps(best_partiton, out, sort_keys=True))
+   out.write(json.dumps(best_partition, out, sort_keys=True))
    out.close()
    ## Test species impact by removal
    sp_imp_rem = speciesImpactByRemoval(G, steps)
